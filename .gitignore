@@ -1,0 +1,4 @@
+.git/
+.vagrant/
+geoserver.zip
+*.log

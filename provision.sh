@@ -1,19 +1,30 @@
 # Install PostGIS
 echo *** Installing PostGIS ***
-	sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt trusty-pgdg main" >> /etc/apt/sources.list'
-	wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
-	sudo apt-add-repository -y ppa:georepublic/pgrouting
-    sudo apt-get update
-	sudo apt-get install -y postgresql-9.4-postgis-2.1 pgadmin3 postgresql-contrib libssl-dev
+	sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt xenial-pgdg main" >> /etc/apt/sources.list'
+	wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | sudo apt-key add -
+	sudo apt-get update
+	sudo apt-get install -y postgresql-9.6
+	sudo apt-get install -y postgresql-9.6-postgis-2.3 postgresql-contrib-9.6 postgresql-9.6-postgis-scripts
+	sudo apt-get install -y postgis
+	sudo apt-get install -y postgresql-9.6-pgrouting
+
+	#sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt trusty-pgdg main" >> /etc/apt/sources.list'
+	#wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | apt-key add -
+	#sudo apt-add-repository -y ppa:georepublic/pgrouting
+  #  sudo apt-get update
+	#sudo apt-get install -y postgresql-9.4-postgis-2.1 pgadmin3 postgresql-contrib libssl-dev
+
+
+
 # Enable Adminpack
 #	sudo -u postgres psql
 #	CREATE EXTENSION adminpack;
-#	service postgresql restart 
+#	service postgresql restart
 #	SELECT pg_reload_conf();
 #	SELECT name, setting FROM pg_settings where category='File Locations';
 #	\q
 #	sudo su - postgres
-# Create user - note change it from postgisuser	
+# Create user - note change it from postgisuser
 #	createuser -d -E -i -l -P -r -s postgisuser
 #	echo "default postgres user <postgisuser> created - please change"
 
@@ -22,18 +33,18 @@ echo *** Installing PostGIS ***
 echo ' '
 echo --- PostGIS Installed - note there will be post-configuration steps needed ---
 
-# Install JRE for GeoServer
-echo ' '
-echo --- Installing JRE ---
-sudo add-apt-repository ppa:openjdk-r/ppa -y
+echo ' Installing Oracle Java 8'
+sudo apt-get install -y python-software-properties debconf-utils
+sudo add-apt-repository -y ppa:webupd8team/java
 sudo apt-get update
-sudo apt-get install -y openjdk-8-jre -y
-echo "Java installed?"
-# sleep 20s
+echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections
+sudo apt-get install -y oracle-java8-installer
+# Install Java Criptography Extension 
+sudo apt install -y oracle-java8-unlimited-jce-policy
 
 # Config JRE - still needs to be fixed
-JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
-export JAVA_HOME
+#JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+#export JAVA_HOME
 
 echo ' '
 echo --- Installing unzip ---
@@ -46,22 +57,20 @@ echo --- Setting Up for GeoServer ---
 echo "export GEOSERVER_HOME=/usr/local/geoserver/" >> ~/.profile
 . ~/.profile
 
-sudo rm -rf /usr/local/geoserver/
-
-mkdir /usr/local/geoserver/
-
-sudo chown -R vagrant /usr/local/geoserver/
+#sudo rm -rf /usr/local/geoserver/
+#mkdir /usr/local/geoserver/
+#sudo chown -R vagrant /usr/local/geoserver/
 
 cd /usr/local
 
 echo ' '
 echo --- Downloading GeoServer package - please wait ---
-
-wget -nv -O tmp.zip http://sourceforge.net/projects/geoserver/files/GeoServer/2.9.1/geoserver-2.9.1-bin.zip && unzip tmp.zip -d /usr/local/ && rm tmp.zip
+if [ ! -f /vagrant/geoserver.zip ]; then wget -nv -O /vagrant/geoserver.zip https://sourceforge.net/projects/geoserver/files/GeoServer/2.12.1/geoserver-2.12.1-bin.zip; fi
+sudo unzip /vagrant/geoserver.zip -d /usr/local/
 
 echo ' '
 echo --- Package unzipped - configuring GeoServer directory ---
-cp -r /usr/local/geoserver-2.9.1/* /usr/local/geoserver && sudo rm -rf /usr/local/geoserver-2.9.1/
+ln -sf /usr/local/geoserver-2.12.1 /usr/local/geoserver
 
 echo ' '
 echo --- GeoServer Installed ---
@@ -69,7 +78,7 @@ echo --- GeoServer Installed ---
 echo ' '
 echo --- Getting ready to run GeoServer ---
 
-sudo chown -R vagrant /usr/local/geoserver/
+sudo chown -R ubuntu /usr/local/geoserver/
 
 cd /usr/local/geoserver/bin
 
